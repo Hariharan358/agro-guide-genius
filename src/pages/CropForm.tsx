@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { 
   Leaf, 
   Thermometer, 
@@ -134,7 +134,7 @@ const CropForm = () => {
         rainfall: parseFloat(formData.rainfall)
       };
 
-      const response = await axios.post('/predict', numericData);
+      const response = await api.post('/predict', numericData);
       
       // Store result in localStorage and navigate to results page
       localStorage.setItem('cropPrediction', JSON.stringify({
