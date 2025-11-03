@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
+import { GoogleTranslateButton } from "@/components/GoogleTranslate";
+import { CloudRain } from "lucide-react";
 import { 
   Leaf, 
   Thermometer, 
   Droplets, 
   FlaskConical, 
-  CloudRain,
+  
   ArrowLeft,
   Send
 } from "lucide-react";
@@ -135,10 +137,22 @@ const CropForm = () => {
       };
 
       const response = await api.post('/predict', numericData);
+      const crop = response.data.crop || response.data.prediction;
+      
+      // Save to history
+      try {
+        await api.post('/history', {
+          input: numericData,
+          prediction: crop,
+          confidence: response.data.confidence || 95
+        });
+      } catch (e) {
+        console.warn('Failed to save to history:', e);
+      }
       
       // Store result in localStorage and navigate to results page
       localStorage.setItem('cropPrediction', JSON.stringify({
-        crop: response.data.crop || response.data.prediction,
+        crop,
         confidence: response.data.confidence || 95,
         inputData: numericData
       }));
@@ -157,19 +171,46 @@ const CropForm = () => {
     }
   };
 
+  const loadFromThingSpeak = async () => {
+    try {
+      const channelId = prompt("2703121");
+      const apiKey = prompt("0F1OMJFYN95I7NF2");
+      if (!channelId || !apiKey) return;
+      const res = await fetch(`${(import.meta as any)?.env?.VITE_API_BASE || 'http://127.0.0.1:5000'}/thingspeak/latest?channelId=${encodeURIComponent(channelId)}&apiKey=${encodeURIComponent(apiKey)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'ThingSpeak fetch failed');
+      setFormData(prev => ({
+        ...prev,
+        N: data.N != null ? String(data.N) : prev.N,
+        P: data.P != null ? String(data.P) : prev.P,
+        K: data.K != null ? String(data.K) : prev.K,
+        temperature: data.temperature != null ? String(data.temperature) : prev.temperature,
+        humidity: data.humidity != null ? String(data.humidity) : prev.humidity,
+        ph: data.ph != null ? String(data.ph) : prev.ph,
+        rainfall: data.rainfall != null ? String(data.rainfall) : prev.rainfall,
+      }));
+      toast({ title: "Loaded from ThingSpeak", description: "Values populated from latest feed." });
+    } catch (e: any) {
+      toast({ title: "ThingSpeak Error", description: e?.message || String(e), variant: "destructive" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/10 to-accent/5 py-12 px-4">
       <div className="container mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="mb-4 hover:bg-primary/10"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="hover:bg-primary/10"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+            <GoogleTranslateButton />
+          </div>
           
           <div className="text-center">
             <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4">
@@ -211,7 +252,7 @@ const CropForm = () => {
               ))}
             </div>
 
-            <div className="pt-6 border-t border-border/20">
+            <div className="pt-6 border-t border-border/20 flex flex-col md:flex-row gap-3">
               <Button 
                 type="submit" 
                 disabled={isLoading}
@@ -228,6 +269,14 @@ const CropForm = () => {
                     <Send className="ml-2 h-5 w-5" />
                   </>
                 )}
+              </Button>
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={loadFromThingSpeak}
+                className="w-full h-14 text-lg"
+              >
+                Load from ThingSpeak
               </Button>
             </div>
           </form>

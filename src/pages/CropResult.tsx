@@ -9,9 +9,12 @@ import {
   TrendingUp, 
   CheckCircle,
   Leaf,
-  Info
+  Info,
+  Download
 } from "lucide-react";
 import { getSuggestions } from "@/lib/suggest";
+import { api } from "@/lib/api";
+import { GoogleTranslateButton } from "@/components/GoogleTranslate";
 
 interface PredictionResult {
   crop: string;
@@ -58,6 +61,46 @@ const CropResult = () => {
   const handleRetry = () => {
     localStorage.removeItem('cropPrediction');
     navigate('/form');
+  };
+
+  const handleExport = async (format: 'text' | 'json' = 'text') => {
+    try {
+      const exportData: any = {
+        crop: result?.crop,
+        prediction: result?.crop,
+        inputData: result?.inputData,
+      };
+      if (suggestData?.structured) {
+        exportData.structured = suggestData.structured;
+      }
+      if (suggestData?.suggestions) {
+        exportData.suggestions = suggestData.suggestions;
+      }
+
+      const baseUrl = (import.meta as any)?.env?.VITE_API_BASE || 'http://127.0.0.1:5000';
+      const response = await fetch(`${baseUrl}/export?format=${format}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exportData)
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = format === 'json' 
+        ? new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+        : await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = format === 'json' ? 'crop_data.json' : 'crop_report.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert('Export failed: ' + (e?.message || String(e)));
+    }
   };
 
   const fetchSuggestions = async (r: PredictionResult) => {
@@ -107,14 +150,17 @@ const CropResult = () => {
       <div className="container mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="mb-4 hover:bg-primary/10"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="hover:bg-primary/10"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+            <GoogleTranslateButton />
+          </div>
           
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full mb-4">
@@ -347,7 +393,7 @@ const CropResult = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
           <Button 
             onClick={handleRetry}
             size="lg"
@@ -355,6 +401,26 @@ const CropResult = () => {
           >
             <RefreshCw className="mr-2 h-5 w-5" />
             Try Another Analysis
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport('text')}
+            size="lg"
+            className="border-primary/20 hover:bg-primary/5 px-8"
+          >
+            <Download className="mr-2 h-5 w-5" />
+            Export as Text
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport('json')}
+            size="lg"
+            className="border-primary/20 hover:bg-primary/5 px-8"
+          >
+            <Download className="mr-2 h-5 w-5" />
+            Export as JSON
           </Button>
           
           <Button 

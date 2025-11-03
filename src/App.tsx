@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import CropForm from "./pages/CropForm";
 import CropResult from "./pages/CropResult";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/form" element={<CropForm />} />
           <Route path="/result" element={<CropResult />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
