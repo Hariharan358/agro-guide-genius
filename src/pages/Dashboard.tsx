@@ -763,7 +763,7 @@ const Dashboard = () => {
                         <div className="text-white mb-2">
                           <div className="text-sm font-medium opacity-90 mb-1 capitalize">{crop}</div>
                           <div className="text-4xl font-bold mb-2">
-                            ${data.price_per_ton}
+                            ₹{data.price_per_ton?.toLocaleString('en-IN') || 'N/A'}
                           </div>
                           <div className="text-sm opacity-90">per ton</div>
                         </div>
@@ -771,10 +771,10 @@ const Dashboard = () => {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-white/90">Change</span>
                             <span className={`text-lg font-bold ${data.change > 0 ? "text-green-200" : data.change < 0 ? "text-red-200" : "text-white"}`}>
-                              {data.change > 0 ? "+" : ""}{data.change}%
+                              {data.change !== undefined && data.change !== null ? `${data.change > 0 ? "+" : ""}${data.change.toFixed(1)}%` : 'N/A'}
                             </span>
                           </div>
-                          <div className="text-xs text-white/70 mt-1">{data.currency}</div>
+                          <div className="text-xs text-white/70 mt-1">{data.currency || 'INR'}</div>
                         </div>
                       </Card>
                     );

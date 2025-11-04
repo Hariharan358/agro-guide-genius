@@ -201,14 +201,14 @@ const CropForm = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
               className="hover:bg-primary/10"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
             <GoogleTranslateButton />
           </div>
           

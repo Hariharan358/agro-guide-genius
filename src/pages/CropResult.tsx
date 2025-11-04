@@ -151,14 +151,14 @@ const CropResult = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
               className="hover:bg-primary/10"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
             <GoogleTranslateButton />
           </div>
           
@@ -245,110 +245,25 @@ const CropResult = () => {
           )}
           {!suggestLoading && !suggestError && suggestData && (
             <div className="space-y-6">
-              {suggestData.structured ? (
+              {/* Display paragraph format */}
+              {suggestData.suggestions ? (
                 <div className="space-y-4">
-                  {/* Paragraph summary */}
-                  <div className="text-base leading-7 text-foreground/90">
-                    {(() => {
-                      const s = suggestData.structured;
-                      const crop = s.crop || result?.crop || 'the crop';
-                      const reason = s.reason ? `${s.reason.trim().replace(/\.$/, '')}.` : '';
-                      const steps = Array.isArray(s.cultivation_steps) ? s.cultivation_steps : [];
-                      const duration = s.duration_weeks ? `${s.duration_weeks} weeks` : '';
-                      const costAmount = s?.estimated_cost?.amount;
-                      const costCurrency = s?.estimated_cost?.currency || '';
-                      const cost = costAmount != null ? `${costAmount} ${costCurrency}`.trim() : '';
-                      const pH = s?.soil_preparation?.ph_adjustment;
-                      const spacingRow = s?.spacing?.row_spacing_cm;
-                      const spacingPlant = s?.spacing?.plant_spacing_cm;
-
-                      const firstStep = steps[0] ? steps[0] : '';
-                      const secondStep = steps[1] ? steps[1] : '';
-
-                      const parts: string[] = [];
-                      parts.push(`${String(crop).charAt(0).toUpperCase() + String(crop).slice(1)} is recommended${reason ? ' because ' + reason : ''}`.trim());
-                      if (pH) parts.push(`Adjust soil pH (${pH}) and prepare the bed before planting.`);
-                      if (spacingRow || spacingPlant) parts.push(`Transplant with spacing around ${spacingRow || '-'} cm (row) × ${spacingPlant || '-'} cm (plant).`);
-                      if (firstStep) parts.push(firstStep + (firstStep.endsWith('.') ? '' : '.'));
-                      if (secondStep) parts.push(secondStep + (secondStep.endsWith('.') ? '' : '.'));
-                      if (duration) parts.push(`Time to first harvest is roughly ${duration}.`);
-                      if (cost) parts.push(`Estimated cultivation cost is about ${cost}.`);
-
-                      return parts.join(' ');
-                    })()}
+                  <div className="prose prose-sm max-w-none text-foreground/90">
+                    <div className="text-base leading-7 whitespace-pre-wrap">
+                      {suggestData.suggestions}
+                    </div>
                   </div>
-
-                  {/* Detailed sections remain below if you also want structure */}
-                  <div><span className="font-semibold">Crop:</span> {suggestData.structured.crop || '-'}</div>
-                  <div><span className="font-semibold">Why:</span> {suggestData.structured.reason || '-'}</div>
-                  <div>
-                    <span className="font-semibold">How to cultivate:</span>
-                    <ol className="list-decimal ml-6 mt-2 space-y-1">
-                      {(suggestData.structured.cultivation_steps || []).map((s: string, i: number) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ol>
+                </div>
+              ) : suggestData.formatted ? (
+                <div className="space-y-4">
+                  <div className="prose prose-sm max-w-none text-foreground/90">
+                    <div className="text-base leading-7 whitespace-pre-wrap">
+                      {suggestData.formatted}
+                    </div>
                   </div>
-                  <div><span className="font-semibold">Duration:</span> {suggestData.structured.duration_weeks || '-'} weeks</div>
-                  <div><span className="font-semibold">Estimated cost:</span> {suggestData.structured?.estimated_cost?.amount || '-'} {suggestData.structured?.estimated_cost?.currency || ''}</div>
-                  {suggestData.structured.soil_preparation && (
-                    <div>
-                      <span className="font-semibold">Soil preparation:</span>
-                      <div className="ml-4 text-sm">
-                        <div>pH: {suggestData.structured.soil_preparation.ph_adjustment || '-'}</div>
-                        <div>Bed: {suggestData.structured.soil_preparation.bed_preparation || '-'}</div>
-                        <div>Organic matter: {suggestData.structured.soil_preparation.organic_matter || '-'}</div>
-                      </div>
-                    </div>
-                  )}
-                  {suggestData.structured.spacing && (
-                    <div>
-                      <span className="font-semibold">Spacing:</span> row {suggestData.structured.spacing.row_spacing_cm || '-'} cm, plant {suggestData.structured.spacing.plant_spacing_cm || '-'} cm
-                    </div>
-                  )}
-                  {Array.isArray(suggestData.structured.irrigation_schedule) && (
-                    <div>
-                      <span className="font-semibold">Irrigation schedule:</span>
-                      <ul className="list-disc ml-6 mt-2 space-y-1 text-sm">
-                        {suggestData.structured.irrigation_schedule.map((i: any, idx: number) => (
-                          <li key={idx}>{i.stage || ''}: every {i.frequency_days || '-'} days, {i.amount_mm || '-'} mm</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {Array.isArray(suggestData.structured.fertilizer_plan) && (
-                    <div>
-                      <span className="font-semibold">Fertilizer plan:</span>
-                      <ul className="list-disc ml-6 mt-2 space-y-1 text-sm">
-                        {suggestData.structured.fertilizer_plan.map((f: any, idx: number) => (
-                          <li key={idx}>{f.time || ''}: {f.type || ''} — {f.amount || ''}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {Array.isArray(suggestData.structured.pest_management) && (
-                    <div>
-                      <span className="font-semibold">Pest management:</span>
-                      <ul className="list-disc ml-6 mt-2 space-y-1 text-sm">
-                        {suggestData.structured.pest_management.map((p: any, idx: number) => (
-                          <li key={idx}>{p.pest || ''}: monitor {p.monitoring || ''}; control {p.control || ''}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {suggestData.structured.expected_yield && (
-                    <div><span className="font-semibold">Expected yield:</span> {suggestData.structured.expected_yield.amount || '-'} {suggestData.structured.expected_yield.unit || ''}</div>
-                  )}
-                  {suggestData.structured.market_notes && (
-                    <div><span className="font-semibold">Market notes:</span> {suggestData.structured.market_notes}</div>
-                  )}
                 </div>
               ) : (
-                <pre className="text-sm whitespace-pre-wrap">{suggestData.suggestions || '(No suggestions)'}</pre>
-              )}
-
-              {suggestData.formatted && (
-                <pre className="text-xs whitespace-pre-wrap p-3 bg-muted/30 rounded-md border border-border/30">{suggestData.formatted}</pre>
+                <p className="text-sm text-muted-foreground">(No suggestions available)</p>
               )}
             </div>
           )}
